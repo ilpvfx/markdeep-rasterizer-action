@@ -1,0 +1,25 @@
+{
+  "name": "markdeep-rasterizer-action",
+  "version": "1.0.0",
+  "description": "GitHub Action to render markdeep to html",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilpvfx/markdeep-rasterizer-action.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ilpvfx/markdeep-rasterizer-action/issues"
+  },
+  "homepage": "https://github.com/ilpvfx/markdeep-rasterizer-action#readme",
+  "dependencies": {
+    "markdeep-rasterizer": "romainguy/markdeep-rasterizer",
+    "@actions/core": "^1.2.6",
+    "@actions/github": "^4.0.0"
+  }
+}

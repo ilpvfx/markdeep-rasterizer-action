@@ -1,0 +1,13 @@
+name: 'Markdeep Rasterizer'
+description: 'GitHub Action to render markdeep to html'
+inputs:
+  out-dir:  # id of input
+    description: 'Output Directory'
+    required: true
+    default: './out'
+outputs:
+  out-dir:
+    description: 'Output Directory'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
