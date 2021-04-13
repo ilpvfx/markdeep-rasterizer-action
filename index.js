@@ -6,11 +6,6 @@ const fs = require('fs');
 const path = require('path');
 const cheerio = require("cheerio");
 
-const markdeepScripts = [
-  '<script src="https://casual-effects.com/markdeep/latest/markdeep.min.js"></script>',
-  '<script src="https://morgan3d.github.io/markdeep/latest/markdeep.min.js?" charset="utf-8"></script>'
-]
-
 async function domDump(url) {
   const browser = await puppeteer.launch({headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"]});
   const page = await browser.newPage();
@@ -20,6 +15,15 @@ async function domDump(url) {
   return html;
 }
 
+function copy_path(src, dst){
+  console.log("Copy", src, dst);
+  let dst_dir = path.dirname(dst);
+  if (!fs.existsSync(dst_dir)){
+    fs.mkdirSync(dst_dir, { recursive: true });
+  }
+  fs.copyFileSync(src, dst);
+}
+
 try {
   let files = [];
   if(process.argv.length < 3){
@@ -27,9 +31,13 @@ try {
   }else{
     files = process.argv.slice(2);
   }
+
   console.log(`FILES: ${files}`);
+
   const outputDir = core.getInput('out-dir');
-  console.log(`OUTPUT: ${outputDir}`);
+  if (!fs.existsSync(outputDir)){
+    fs.mkdirSync(outputDir);
+  }
 
   files.forEach(function(file) {
     if (file.substring(file.length - '.md.html'.length, file.length) === '.md.html') {
@@ -37,8 +45,9 @@ try {
     }
 
     var markdeepFile = path.join(process.cwd(), file + '.md.html');
-    var outputFile = path.basename(file + '.html');
-
+    let src_dir = path.dirname(markdeepFile);
+    var outputFile = path.join(outputDir, path.basename(file + '.html'));
+    let dst_dir = path.dirname(outputFile);
     domDump('file://' + markdeepFile + '?export').then(function(dom) {
         console.log('Processing ' + markdeepFile + '...');
 
@@ -50,9 +59,22 @@ try {
         dom = dom.replace(/<script src=".*markdeep.*".*><\/script>/g, '');
         // Now replace <pre> with its own content so we can preserve headers
         $('pre').replaceWith(dom);
-        const outputPath = path.join(outputDir, outputFile);
-        console.log(`Saving rasterized file: ${outputPath}`);
-        fs.writeFile(outputPath, $.html(), function(err) {
+
+        // relocate files
+        if(path.normalize(src_dir) !== path.normalize(dst_dir)){
+          $('img').each( (i, element) => {
+            let src = $(element).attr('src');
+            if(!path.isAbsolute(src)){
+              img_abs_src = path.resolve(src_dir, src);
+              img_abs_dst = path.resolve(dst_dir, src);
+              copy_path(img_abs_src, img_abs_dst);
+            }
+          });
+          // Probably add other potential files
+        }
+
+        console.log(`Saving rasterized file: ${outputFile}`);
+        fs.writeFile(outputFile, $.html(), function(err) {
             if (err) console.log(err);
         });
     }).catch(function(e) {
